@@ -41,7 +41,7 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': (
             'password', 'email', 'phone',
-            'city', 'avatar')}),
+            'city', 'avatar', 'groups')}),
         ('Права доступа', {'fields': ('is_superuser', 'is_staff', 'is_active', 'user_permissions')}),
     )
     add_fieldsets = (
@@ -49,7 +49,7 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('wide',),
             'fields': (
                 'password', 'confirm_password',
-                'email', 'phone', 'city', 'avatar')}),
+                'email', 'phone', 'city', 'avatar', 'groups')}),
         ('Права доступа', {'fields': ('is_superuser', 'is_staff', 'is_active', 'user_permissions')}),
     )
     search_fields = ('email', 'phone')
