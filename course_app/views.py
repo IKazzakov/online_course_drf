@@ -3,10 +3,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, generics
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from course_app.models import Course, Lesson
+from course_app.models import Course, Lesson, Subscription
+from course_app.pagination import MaterialsPagination
 from course_app.permissions import IsOwner, IsModerator
-from course_app.serializers import CourseSerializer, LessonSerializer
+from course_app.serializers import CourseSerializer, LessonSerializer, SubscriptionSerializer
 from users.models import Payments
 from users.serializers import PaymentSerializer
 
@@ -14,6 +17,7 @@ from users.serializers import PaymentSerializer
 # Create your views here.
 
 class CourseViewSet(viewsets.ModelViewSet):
+    pagination_class = MaterialsPagination
     serializer_class = CourseSerializer
     queryset = Course.objects.all()
     perms_methods = {
@@ -25,12 +29,16 @@ class CourseViewSet(viewsets.ModelViewSet):
         'destroy': [IsAuthenticated, IsOwner | IsAdminUser],
     }
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     def get_permissions(self):
         self.permission_classes = self.perms_methods.get(self.action, self.permission_classes)
         return [permission() for permission in self.permission_classes]
 
 
 class LessonListView(generics.ListAPIView):
+    pagination_class = MaterialsPagination
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsAuthenticated, IsModerator | IsOwner]
@@ -94,3 +102,25 @@ class PaymentUpdateView(generics.UpdateAPIView):
     serializer_class = PaymentSerializer
     queryset = Payments.objects.all()
     permission_classes = [IsModerator | IsOwner]
+
+
+class SubscribeAPIView(APIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, *args, **kwargs):
+
+        course = Course.objects.get(pk=self.kwargs['pk'])
+        user = self.request.user
+        subscription = Subscription.objects.filter(course=course, user=user).first()
+
+        if subscription.status:
+            subscription.status = False
+            subscription.save()
+            message = 'Вы отписались от курса.'
+        else:
+            subscription.status = True
+            subscription.save()
+            message = 'Вы подписались на курс.'
+
+        return Response({"detail": message})
