@@ -87,9 +87,8 @@ class LessonTestCase(APITestCase):
         # Тест операции получения списка уроков
         list_url = reverse('course_app:lesson_list')
         response = self.client.get(list_url)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]['name'], self.lesson.name)
+        self.assertEqual(response.data['results'][0]['name'], self.lesson.name)
 
 
 class SubscriptionTestCase(APITestCase):
