@@ -9,7 +9,7 @@ from users.models import User
 class LessonTestCase(APITestCase):
     def setUp(self):
         # Тестовый пользователь
-        self.user = User(email='test@test.ru', phone='111111111', city='Testograd', is_superuser=True, is_staff=True,
+        self.user = User(email='test@test.ru', phone='111111111', city='Testograd', is_superuser=False, is_staff=False,
                          is_active=True)
         self.user.set_password('123QWE456RTY')
         self.user.save()
@@ -108,12 +108,15 @@ class SubscriptionTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}'}
 
+        # Тестовый курс
         self.course = Course.objects.create(
             name="test_course",
         )
 
-        self.course = Course.objects.create(
-            name="test_course",
+        # Создаем тестовую подписку
+        self.subscribe = Subscription.objects.create(
+            user=self.user,
+            course=self.course,
         )
 
     def test_subscribe_to_course(self):
