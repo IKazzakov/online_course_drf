@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from course_app.models import Course, Lesson, Subscription
 from course_app.pagination import MaterialsPagination
 from course_app.permissions import IsOwner, IsModerator
 from course_app.serializers import CourseSerializer, LessonSerializer, SubscriptionSerializer
+from course_app.services import create_stripe_price, create_stripe_session
 from users.models import Payments
 from users.serializers import PaymentSerializer
 
@@ -83,7 +85,16 @@ class PaymentListView(generics.ListAPIView):
 class PaymentCreateView(generics.CreateAPIView):
     serializer_class = PaymentSerializer
     queryset = Payments.objects.all()
-    permission_classes = [IsOwner]
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        course = serializer.validated_data.get('paid_course')
+        if not course:
+            raise serializers.ValidationError('Укажите курс')
+        payment = serializer.save()
+        stripe_price_id = create_stripe_price(payment)
+        payment.payment_link, payment.payment_id = create_stripe_session(stripe_price_id)
+        payment.save()
 
 
 class PaymentDeleteView(generics.DestroyAPIView):
