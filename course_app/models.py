@@ -11,6 +11,7 @@ class Course(models.Model):
     preview = models.ImageField(upload_to='course/', **NULLABLE, verbose_name='превью (картинка)')
     description = models.TextField(verbose_name='описание')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, **NULLABLE, verbose_name='автор')
+    last_update = models.DateTimeField(verbose_name='последнее обновление', auto_now=True)
 
     class Meta:
         verbose_name = 'Курс'

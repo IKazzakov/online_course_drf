@@ -1,7 +1,6 @@
-from django.shortcuts import render
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, generics, serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -14,6 +13,8 @@ from course_app.serializers import CourseSerializer, LessonSerializer, Subscript
 from course_app.services import create_stripe_price, create_stripe_session
 from users.models import Payments
 from users.serializers import PaymentSerializer
+
+from .tasks import update_course_notification
 
 
 # Create your views here.
@@ -33,6 +34,13 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        course = serializer.save()
+        course_id = course.id
+        course.last_update = timezone.now()
+
+        update_course_notification.delay(course_id)
 
     def get_permissions(self):
         self.permission_classes = self.perms_methods.get(self.action, self.permission_classes)
