@@ -18,8 +18,8 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes = []
         if self.action in ['update', 'partial_update']:
             permission_classes = [IsUserProfile]
-        if self.action in ['create']:
-            permission_classes = [IsAdminUser]
+        # if self.action in ['create']:
+        #     permission_classes = [IsAdminUser]
 
         return [permission() for permission in permission_classes]
 
