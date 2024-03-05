@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 
 from config.settings import EMAIL_HOST_USER
-from course_app.models import Subscription, Course
+from course_app.models import Subscription
 
 
 @shared_task
