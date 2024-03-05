@@ -133,13 +133,18 @@ class SubscribeAPIView(APIView):
         user = self.request.user
         subscription = Subscription.objects.filter(course=course, user=user).first()
 
-        if subscription.status:
-            subscription.status = False
-            subscription.save()
-            message = 'Вы отписались от курса.'
+        if subscription:
+
+            if subscription.status:
+                subscription.status = False
+                subscription.save()
+                message = 'Вы отписались от курса.'
+            else:
+                subscription.status = True
+                subscription.save()
+                message = 'Вы подписались на курс.'
         else:
-            subscription.status = True
-            subscription.save()
+            Subscription.objects.create(course=course, user=user, status=True)
             message = 'Вы подписались на курс.'
 
         return Response({"detail": message})
